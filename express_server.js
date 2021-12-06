@@ -8,6 +8,19 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 
+const generateRandomString = () => {
+  let characters = "ABCDEFGHIJKLMNOPQRSTUVWXTZ0123456789abcdefghiklmnopqrstuvwxyz";
+  let lengthString = 6;
+  let randomString = '';
+  for (let i = 0; i < lengthString; i++) {
+    let rnum = Math.floor(Math.random() * characters.length);
+    randomString += characters[rnum];
+    console.log(randomString);
+  }
+};
+
+generateRandomString();
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
