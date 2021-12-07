@@ -33,6 +33,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+
 // Create a new short URL.
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
@@ -44,6 +45,14 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+
+// Editing a LongURL
+app.post('/urls/:id',(req, res)=>{
+  const id = req.params.id;
+  const newLongURL = req.body.longURL;
+  urlDatabase[id] = newLongURL;
+  res.redirect('/urls');
+});
 
 // After clicking on the short URL: 1) check if this URL exists in DB and then redirect to a long URL.
 app.get("/u/:shortURL", (req, res) => {
