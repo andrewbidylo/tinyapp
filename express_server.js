@@ -27,6 +27,19 @@ let urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
+
 // Generate a short URL and get Long URL and push it in DB. After that redirect to a new page with a shortURL.
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
@@ -38,7 +51,7 @@ app.post("/urls", (req, res) => {
 
 // Create a new short URL.
 app.get("/urls/new", (req, res) => {
-  const templateVars = {username: req.cookies["username"]};
+  const templateVars = { username: req.cookies["username"] };
   res.render("urls_new", templateVars);
 });
 
@@ -51,13 +64,25 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // Registration
 app.get("/register", (req, res) => {
-  const templateVars = {username: req.cookies["username"]};
-  res.render("registration_page",templateVars);
+  const templateVars = { username: req.cookies["username"] };
+  res.render("registration_page", templateVars);
+});
+app.post('/register', (req, res) => {
+  let userId = generateRandomString();
+  let email = req.body.email;
+  let password = req.body.password;
+  users[userId] = {
+    id: userId,
+    email,
+    password,
+  };
+  res.cookie('user_id', userId);
+  console.log(users);
+  res.redirect('/urls');
 });
 
-
 // Editing a LongURL
-app.post('/urls/:id',(req, res)=>{
+app.post('/urls/:id', (req, res) => {
   const id = req.params.id;
   const newLongURL = req.body.longURL;
   urlDatabase[id] = newLongURL;
@@ -65,14 +90,14 @@ app.post('/urls/:id',(req, res)=>{
 });
 
 // Creating a new user
-app.post('/login',(req, res)=>{
+app.post('/login', (req, res) => {
   const username = req.body.username;
   res.cookie('username', username);
   res.redirect('/urls');
 });
 
 // Logout
-app.post('/logout',(req, res)=>{
+app.post('/logout', (req, res) => {
   res.clearCookie("username");
   res.redirect('/urls');
 });
@@ -95,7 +120,7 @@ app.get("/", (req, res) => {
 
 // Page that shows existing in DB URLs.
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("urls_index", templateVars);
 });
 
