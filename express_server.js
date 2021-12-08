@@ -83,10 +83,10 @@ app.post('/login', (req, res) => {
   let password = req.body.password;
   let foudUser = findUserByEmail(email);
   if (!foudUser) {
-    res.redirect('/register');
+    return res.status(403).send('E-mail cannot be found');
   }
   if (foudUser.password !== password) {
-    return res.status(400).send('Email is not correct');
+    return res.status(403).send('Password is not correct');
   }
   res.cookie('user_id', foudUser.id);
   res.redirect('/urls');
