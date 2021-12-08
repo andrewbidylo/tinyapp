@@ -10,10 +10,17 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
       <div class='d-flex flex-row-reverse'>
-        <form class='m-10 d-inline-flex' method="POST" action='/login'>
-        <input class='form-control' name="username" placeholder='username'>
-        <button class='btn btn-primary '>Login</button>
+        <% if(username){ %>
+          <form method="POST" action='/logout'> 
+            <span class='mr-10 text-white align-middlem'><b>Logged as:</b> <%= username %></span>
+          <button class='btn btn-light ml-3'>Logout</button>
         </form>
+        <% } else{ %>  
+          <form class='d-inline-flex' method="POST" action='/login'>
+            <input class='form-control' name="username" placeholder='Your username'>
+            <button class='btn btn-warning ml-3'>Login</button>
+            </form>
+       <% } %>
       </div>
     </div>
   </nav>

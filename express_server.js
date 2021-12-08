@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 const cookieParser = require('cookie-parser');
 
+app.use(cookieParser());
 app.set("view engine", "ejs");
 
 
@@ -19,7 +20,7 @@ const generateRandomString = () => {
   return randomString;
 };
 
-
+// DATA
 let urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
@@ -58,9 +59,14 @@ app.post('/urls/:id',(req, res)=>{
 // Creating a new user
 app.post('/login',(req, res)=>{
   const username = req.body.username;
-  console.log(username);
   res.cookie('username', username);
 
+  res.redirect('/urls');
+});
+
+// Logout
+app.post('/logout',(req, res)=>{
+  res.clearCookie("username");
   res.redirect('/urls');
 });
 
