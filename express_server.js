@@ -51,20 +51,23 @@ app.post("/urls", (req, res) => {
 
 // Create a new short URL.
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const newUser = users[req.cookies["user_id"]];
+  const templateVars = { user: newUser};
   res.render("urls_new", templateVars);
 });
 
 // Render a page with a new-created shortURL.
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
+  const newUser = users[req.cookies["user_id"]];
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: newUser };
   res.render("urls_show", templateVars);
 });
 
 
 // Registration
 app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const newUser = users[req.cookies["user_id"]];
+  const templateVars = {user: newUser};
   res.render("registration_page", templateVars);
 });
 app.post('/register', (req, res) => {
@@ -77,7 +80,6 @@ app.post('/register', (req, res) => {
     password,
   };
   res.cookie('user_id', userId);
-  console.log(users);
   res.redirect('/urls');
 });
 
@@ -98,7 +100,7 @@ app.post('/login', (req, res) => {
 
 // Logout
 app.post('/logout', (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect('/urls');
 });
 
@@ -120,7 +122,8 @@ app.get("/", (req, res) => {
 
 // Page that shows existing in DB URLs.
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  const newUser = users[req.cookies["user_id"]];
+  const templateVars = { urls: urlDatabase, user: newUser};
   res.render("urls_index", templateVars);
 });
 
