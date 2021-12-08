@@ -31,12 +31,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "123"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "123"
   }
 };
 
@@ -73,6 +73,25 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Login form
+app.get('/login', (req, res) => {
+  res.render('login_page');
+});
+
+app.post('/login', (req, res) => {
+  let email = req.body.email;
+  let password = req.body.password;
+  let foudUser = findUserByEmail(email);
+  if (!foudUser) {
+    res.redirect('/register');
+  }
+  if (foudUser.password !== password) {
+    return res.status(400).send('Email is not correct');
+  }
+  res.cookie('user_id', foudUser.id);
+  res.redirect('/urls');
+
+});
 
 // Registration
 app.get("/register", (req, res) => {
@@ -107,17 +126,10 @@ app.post('/urls/:id', (req, res) => {
   res.redirect('/urls');
 });
 
-// Creating a new user
-app.post('/login', (req, res) => {
-  const username = req.body.username;
-  res.cookie('username', username);
-  res.redirect('/urls');
-});
-
 // Logout
 app.post('/logout', (req, res) => {
   res.clearCookie("user_id");
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 
