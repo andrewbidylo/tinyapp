@@ -40,6 +40,16 @@ const users = {
   }
 };
 
+const findUserByEmail = (email) => {
+  for (let userID in users) {
+    const user = users[userID];
+    if (user.email === email) {
+      return user;
+    }
+  }
+  return null;
+};
+
 // Generate a short URL and get Long URL and push it in DB. After that redirect to a new page with a shortURL.
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
@@ -52,7 +62,7 @@ app.post("/urls", (req, res) => {
 // Create a new short URL.
 app.get("/urls/new", (req, res) => {
   const newUser = users[req.cookies["user_id"]];
-  const templateVars = { user: newUser};
+  const templateVars = { user: newUser };
   res.render("urls_new", templateVars);
 });
 
@@ -67,13 +77,19 @@ app.get("/urls/:shortURL", (req, res) => {
 // Registration
 app.get("/register", (req, res) => {
   const newUser = users[req.cookies["user_id"]];
-  const templateVars = {user: newUser};
+  const templateVars = { user: newUser };
   res.render("registration_page", templateVars);
 });
 app.post('/register', (req, res) => {
   let userId = generateRandomString();
   let email = req.body.email;
   let password = req.body.password;
+  if (!email || !password) {
+    return res.status(400).send('Email or Password cannot be blank');
+  }
+  if (findUserByEmail(email)) {
+    return res.status(400).send('Email already exists');
+  }
   users[userId] = {
     id: userId,
     email,
@@ -123,7 +139,7 @@ app.get("/", (req, res) => {
 // Page that shows existing in DB URLs.
 app.get("/urls", (req, res) => {
   const newUser = users[req.cookies["user_id"]];
-  const templateVars = { urls: urlDatabase, user: newUser};
+  const templateVars = { urls: urlDatabase, user: newUser };
   res.render("urls_index", templateVars);
 });
 
