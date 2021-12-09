@@ -18,6 +18,9 @@ app.use(cookieSession({
 }));
 
 
+/*
+* Create a new short URL
+*/
 
 // Generate a short URL and get Long URL and push it in DB. After that redirect to a new page with a shortURL.
 app.post("/urls", (req, res) => {
@@ -47,13 +50,17 @@ app.get("/urls/:shortURL", (req, res) => {
   const newUser = users[req.session["user_id"]];
   let newDB = urlsForUser(newUser.id, urlDatabase);
   if (!newDB[req.params.shortURL]) {
-    return res.status(400).send('ID does not exist');
+    return res.status(403).send('You do not have access to this ID');
   }
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], user: newUser };
   res.render("urls_show", templateVars);
 });
 
-// Login form
+
+/*
+* Login / Logout
+*/
+
 app.get('/login', (req, res) => {
   res.render('login_page');
 });
@@ -62,18 +69,28 @@ app.post('/login', (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
   let foudUser = findUserByEmail(email, users);
-  const passwordCheck = bcrypt.compareSync(password, foudUser.password);
+  
   if (!foudUser) {
     return res.status(400).send('E-mail cannot be found');
   }
+  const passwordCheck = bcrypt.compareSync(password, foudUser.password);
   if (!passwordCheck) {
     return res.status(403).send('Password is not correct');
   }
+  
   req.session['user_id'] = foudUser.id;
   res.redirect('/urls');
 });
 
-// Registration
+app.post('/logout', (req, res) => {
+  req.session["user_id"] = null;
+  res.redirect('/login');
+});
+
+/*
+* Registration
+*/
+
 app.get("/register", (req, res) => {
   const newUser = users[req.session["user_id"]];
   const templateVars = { user: newUser };
@@ -99,7 +116,11 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
-// Editing a LongURL
+
+/*
+* Editing a LongURL
+*/
+
 app.post('/urls/:id', (req, res) => {
   const newDB = urlsForUser(req.session["user_id"], urlDatabase);
   const id = req.params.id;
@@ -115,45 +136,11 @@ app.post('/urls/:id', (req, res) => {
   }
 });
 
-// Logout
-app.post('/logout', (req, res) => {
-  req.session["user_id"] = null;
-  res.redirect('/login');
-});
 
-// After clicking on the short URL: 1) check if this URL exists in DB and then redirect to a long URL.
-app.get("/u/:shortURL", (req, res) => {
-  let shortURL = urlDatabase[req.params.shortURL];
-  if (shortURL === undefined) {
-    return res.status(400).send('URL does not exist');
-  } else {
-    const longURL = shortURL['longURL'];
-    res.redirect(longURL);
-  }
-});
+/*
+* Delete a URL
+*/
 
-// Home page.
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-// Page that shows existing in DB URLs.
-app.get("/urls", (req, res) => {
-  const newUser = users[req.session["user_id"]];
-  if (typeof newUser === 'undefined') {
-    return res.status(403).send('Please log in or register first!');
-  }
-  let ownURLs = urlsForUser(newUser.id, urlDatabase);
-  const templateVars = { urls: ownURLs, user: newUser };
-  res.render("urls_index", templateVars);
-});
-
-// Hello page
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-// Delete URL
 app.post('/urls/:shortURL/delete', (req, res) => {
   const newDB = urlsForUser(req.session["user_id"], urlDatabase);
   const shortURL = req.params.shortURL;
@@ -164,6 +151,57 @@ app.post('/urls/:shortURL/delete', (req, res) => {
     return res.status(400).send('Please log in');
   }
 });
+
+
+/*
+* Redirect to a long URL
+*/
+
+// After clicking on the short URL: check if this URL exists in DB and then redirect to a long URL.
+app.get("/u/:shortURL", (req, res) => {
+  let shortURL = urlDatabase[req.params.shortURL];
+  if (shortURL === undefined) {
+    return res.status(400).send('URL does not exist');
+  } else {
+    const longURL = shortURL['longURL'];
+    res.redirect(longURL);
+  }
+});
+
+
+/*
+* Home page
+*/
+
+app.get("/", (req, res) => {
+  res.send("Hello!");
+});
+
+
+/*
+* URLs page
+*/
+
+app.get("/urls", (req, res) => {
+  const newUser = users[req.session["user_id"]];
+  if (typeof newUser === 'undefined') {
+    return res.status(403).send('Please log in or register first!');
+  }
+  let ownURLs = urlsForUser(newUser.id, urlDatabase);
+  const templateVars = { urls: ownURLs, user: newUser };
+  res.render("urls_index", templateVars);
+});
+
+
+/*
+* Hello page
+*/
+
+app.get("/hello", (req, res) => {
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
