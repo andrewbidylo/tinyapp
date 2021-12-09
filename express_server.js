@@ -10,6 +10,7 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 
 
+
 const generateRandomString = () => {
   let characters = "ABCDEFGHIJKLMNOPQRSTUVWXTZ0123456789abcdefghiklmnopqrstuvwxyz";
   let lengthString = 6;
@@ -54,7 +55,11 @@ const findUserByEmail = (email) => {
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
+  const user = users[req.cookies["user_id"]];
   urlDatabase[shortURL] = longURL;
+  if (typeof user === 'undefined') {
+    return res.status(403).send('You do not have an access to this page!');
+  }
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -63,6 +68,9 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const newUser = users[req.cookies["user_id"]];
   const templateVars = { user: newUser };
+  if (!newUser) {
+    res.redirect('/login');
+  }
   res.render("urls_new", templateVars);
 });
 
@@ -89,6 +97,7 @@ app.post('/login', (req, res) => {
     return res.status(403).send('Password is not correct');
   }
   res.cookie('user_id', foudUser.id);
+
   res.redirect('/urls');
 
 });
@@ -123,6 +132,7 @@ app.post('/urls/:id', (req, res) => {
   const id = req.params.id;
   const newLongURL = req.body.longURL;
   urlDatabase[id] = newLongURL;
+
   res.redirect('/urls');
 });
 
