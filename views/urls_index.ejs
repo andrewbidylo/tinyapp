@@ -11,7 +11,11 @@
 <body>
   <%- include('partials/_header') %>
   <main style="margin: 1em;">
-    <h3>My URLs</h3>
+    
+    
+        <% if(typeof user !== 'undefined'){ %>
+          <% for(let shortURL in urls) { %>
+            <h3>My URLs</h3>
     <table class="table">
       <thead>
         <tr>
@@ -22,19 +26,22 @@
         </tr>
       </thead>
       <tbody>
-        <% for(let shortURL in urls) { %>
-          <tr>
-            <td><%= shortURL %></td>
-            <td><%= urls[shortURL].longURL %></td>
-            <form method="GET" action='/urls/<%= shortURL %>'> 
-              <td><button method="GET" action='/urls/<%= shortURL %>' type="edit" class="btn btn-primary">Edit</button></td>
-            </form>
-            <form method="POST" action='/urls/<%= shortURL %>/delete'> 
-              <td><button type="delete" class="btn btn-outline-danger">Delete</button></td>
-            </form>
-            
-          </tr>
-        <% } %>
+            <tr>
+              <td><%= shortURL %></td>
+              <td><%= urls[shortURL].longURL %></td>
+              <form method="GET" action='/urls/<%= shortURL %>'> 
+                <td><button method="GET" action='/urls/<%= shortURL %>' type="edit" class="btn btn-primary">Edit</button></td>
+              </form>
+              <form method="POST" action='/urls/<%= shortURL %>/delete'> 
+                <td><button type="delete" class="btn btn-outline-danger">Delete</button></td>
+              </form>
+              
+            </tr>
+          <% } %>
+          <% } else { %>  
+              <p>User does not exist</p>
+            <% } %>
+       
   
       </tbody>
     </table>

@@ -13,20 +13,26 @@
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %>
-        </h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>">
-            <%= shortURL %>
-          </a></p>
-        <div class="p-3 mb-2 bg-light text-dark">
-          <label><h2>Edit</h2></label>
-          <form method="POST" action='/urls/<%= shortURL %>'>
-              <input class="form-control center m-auto" value ="<%= longURL %>" type="text" name="longURL"
-                style="width: 300px; margin: 1em"/>
-                <br>
-              <button type="submit" class="btn btn-outline-danger">Submit</button>
-          </form>
-        </div>
+        <% if(typeof user !== 'undefined' || Object.keys(newDB).length !== 0 ){ %>
+          <h5 class="card-title">TinyURL for: <%= longURL %>
+          </h5>
+          <p class="card-text">Short URL: <a href="/u/<%= shortURL %>">
+              <%= shortURL %>
+            </a></p>
+          <div class="p-3 mb-2 bg-light text-dark">
+            <label><h2>Edit</h2></label>
+            <form method="POST" action='/urls/<%= shortURL %>'>
+                <input class="form-control center m-auto" value ="<%= longURL %>" type="text" name="longURL"
+                  style="width: 300px; margin: 1em"/>
+                  <br>
+                <button type="submit" class="btn btn-outline-danger">Submit</button>
+            </form>
+          </div>
+          <% } else { %>  
+            <p>User does not exist</p>
+          <% } %>
+
+       
       </div>
       <div class="card-footer text-muted"></div>
     </div>
