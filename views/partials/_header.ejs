@@ -16,13 +16,8 @@
           <button class='btn btn-light ml-3'>Logout</button>
         </form>
         <% } else { %>  
-          <form class='d-inline-flex' method="GET" action='/login'>
-            <button class='btn btn-warning ml-3'>Login</button>
-            </form>
-            <form class='d-inline-flex' method="GET" action='/register'>
-              <button class='btn btn-warning ml-3'>Register</button>
-            </form>
-            
+          <a class="nav-item nav-link text-light" href="/register">Register</a>
+          <a class="nav-item nav-link text-light" href="/login">Login</a>            
        <% } %>
       </div>
     </div>
