@@ -11,11 +11,6 @@ app.set("view engine", "ejs");
 
 
 
-
-
-const hashedPassword = bcrypt.hashSync(password, 10);
-
-
 const generateRandomString = () => {
   let characters = "ABCDEFGHIJKLMNOPQRSTUVWXTZ0123456789abcdefghiklmnopqrstuvwxyz";
   let lengthString = 6;
@@ -48,17 +43,17 @@ const users = {
   "aJ48sW": {
     id: "aJ48sW",
     email: "user@example.com",
-    password: "123"
+    password: "$2a$10$3vh5EMqrqpvG52x.3rWJyOXZN81CzTGZYybs2FGvmySNrkkN/5A.6"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "123"
+    password: "$2a$10$3vh5EMqrqpvG52x.3rWJyOXZN81CzTGZYybs2FGvmySNrkkN/5A.6"
   },
   "userRandomI3D": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "123"
+    password: "$2a$10$3vh5EMqrqpvG52x.3rWJyOXZN81CzTGZYybs2FGvmySNrkkN/5A.6"
   },
 };
 
@@ -126,10 +121,11 @@ app.post('/login', (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
   let foudUser = findUserByEmail(email);
+  const passwordCheck = bcrypt.compareSync(password, foudUser.password);
   if (!foudUser) {
     return res.status(403).send('E-mail cannot be found');
   }
-  if (foudUser.password !== password) {
+  if (!passwordCheck) {
     return res.status(403).send('Password is not correct');
   }
   res.cookie('user_id', foudUser.id);
