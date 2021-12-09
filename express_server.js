@@ -23,9 +23,20 @@ const generateRandomString = () => {
 };
 
 // DATA
+// let urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com",
+// };
+
 let urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
+  }
 };
 
 const users = {
@@ -56,7 +67,9 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
   const user = users[req.cookies["user_id"]];
-  urlDatabase[shortURL] = longURL;
+
+  urlDatabase[shortURL] = { 'longURL': longURL, 'userID': user.id };
+  console.log(urlDatabase);
   if (typeof user === 'undefined') {
     return res.status(403).send('You do not have an access to this page!');
   }
@@ -77,7 +90,10 @@ app.get("/urls/new", (req, res) => {
 // Render a page with a new-created shortURL.
 app.get("/urls/:shortURL", (req, res) => {
   const newUser = users[req.cookies["user_id"]];
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: newUser };
+  if (typeof urlDatabase[req.params.shortURL] === 'undefined') {
+    return res.status(400).send('ID does not exist');
+  }
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], user: newUser };
   res.render("urls_show", templateVars);
 });
 
@@ -131,7 +147,10 @@ app.post('/register', (req, res) => {
 app.post('/urls/:id', (req, res) => {
   const id = req.params.id;
   const newLongURL = req.body.longURL;
-  urlDatabase[id] = newLongURL;
+  urlDatabase[id]['longURL'] = newLongURL;
+  if (typeof id  === 'undefined') {
+    return res.status(400).send('ID does not exist');
+  }
 
   res.redirect('/urls');
 });
@@ -145,10 +164,11 @@ app.post('/logout', (req, res) => {
 
 // After clicking on the short URL: 1) check if this URL exists in DB and then redirect to a long URL.
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  if (longURL === undefined) {
-    res.send("<html><body>URL doesn't exist.</></body></html>\n");
+  let shortURL = urlDatabase[req.params.shortURL];
+  if (shortURL === undefined) {
+    return res.status(400).send('URL does not exist');
   } else {
+    const longURL = shortURL['longURL'];
     res.redirect(longURL);
   }
 });
