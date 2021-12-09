@@ -2,13 +2,17 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.set("view engine", "ejs");
 
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1','key2'],
+}));
 
 
 const generateRandomString = () => {
@@ -82,7 +86,7 @@ const urlsForUser = (id) => {
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session["user_id"]];
   urlDatabase[shortURL] = { 'longURL': longURL, 'userID': user.id };
   if (typeof user === 'undefined') {
     return res.status(403).send('You do not have an access to this page!');
@@ -93,7 +97,7 @@ app.post("/urls", (req, res) => {
 
 // Create a new short URL.
 app.get("/urls/new", (req, res) => {
-  const newUser = users[req.cookies["user_id"]];
+  const newUser = users[req.session["user_id"]];
   const templateVars = { user: newUser };
   if (!newUser) {
     res.redirect('/login');
@@ -103,7 +107,7 @@ app.get("/urls/new", (req, res) => {
 
 // Render a page with a new-created shortURL.
 app.get("/urls/:shortURL", (req, res) => {
-  const newUser = users[req.cookies["user_id"]];
+  const newUser = users[req.session["user_id"]];
   let newDB = urlsForUser(newUser.id);
   if (!newDB[req.params.shortURL]) {
     return res.status(400).send('ID does not exist');
@@ -128,13 +132,13 @@ app.post('/login', (req, res) => {
   if (!passwordCheck) {
     return res.status(403).send('Password is not correct');
   }
-  res.cookie('user_id', foudUser.id);
+  req.session['user_id'] = foudUser.id;
   res.redirect('/urls');
 });
 
 // Registration
 app.get("/register", (req, res) => {
-  const newUser = users[req.cookies["user_id"]];
+  const newUser = users[req.session["user_id"]];
   const templateVars = { user: newUser };
   res.render("registration_page", templateVars);
 });
@@ -154,13 +158,13 @@ app.post('/register', (req, res) => {
     email,
     password: hashedPassword,
   };
-  res.cookie('user_id', userId);
+  req.session['user_id'] = userId;
   res.redirect('/urls');
 });
 
 // Editing a LongURL
 app.post('/urls/:id', (req, res) => {
-  const newDB = urlsForUser(req.cookies["user_id"]);
+  const newDB = urlsForUser(req.session["user_id"]);
   const id = req.params.id;
   if (typeof id === 'undefined') {
     return res.status(400).send('ID does not exist');
@@ -176,7 +180,7 @@ app.post('/urls/:id', (req, res) => {
 
 // Logout
 app.post('/logout', (req, res) => {
-  res.clearCookie("user_id");
+  req.session["user_id"] = null;
   res.redirect('/login');
 });
 
@@ -198,7 +202,7 @@ app.get("/", (req, res) => {
 
 // Page that shows existing in DB URLs.
 app.get("/urls", (req, res) => {
-  const newUser = users[req.cookies["user_id"]];
+  const newUser = users[req.session["user_id"]];
   if (typeof newUser === 'undefined') {
     return res.status(403).send('Please log in or register first!');
   }
@@ -214,7 +218,7 @@ app.get("/hello", (req, res) => {
 
 // Delete URL
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const newDB = urlsForUser(req.cookies["user_id"]);
+  const newDB = urlsForUser(req.session["user_id"]);
   const shortURL = req.params.shortURL;
   if (newDB[shortURL]) {
     delete urlDatabase[shortURL];
