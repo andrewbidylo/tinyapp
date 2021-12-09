@@ -3,12 +3,17 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-
+const bcrypt = require('bcryptjs');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set("view engine", "ejs");
 
+
+
+
+
+const hashedPassword = bcrypt.hashSync(password, 10);
 
 
 const generateRandomString = () => {
@@ -141,7 +146,8 @@ app.post('/register', (req, res) => {
   let userId = generateRandomString();
   let email = req.body.email;
   let password = req.body.password;
-  if (!email || !password) {
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  if (!email || !hashedPassword) {
     return res.status(400).send('Email or Password cannot be blank');
   }
   if (findUserByEmail(email)) {
@@ -150,7 +156,7 @@ app.post('/register', (req, res) => {
   users[userId] = {
     id: userId,
     email,
-    password,
+    password: hashedPassword,
   };
   res.cookie('user_id', userId);
   res.redirect('/urls');
