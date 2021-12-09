@@ -4,6 +4,9 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const {findUserByEmail, generateRandomString, urlsForUser} = require('./helpers');
+const {urlDatabase, users} = require('./database');
+
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
@@ -14,72 +17,6 @@ app.use(cookieSession({
   keys: ['key1','key2'],
 }));
 
-
-const generateRandomString = () => {
-  let characters = "ABCDEFGHIJKLMNOPQRSTUVWXTZ0123456789abcdefghiklmnopqrstuvwxyz";
-  let lengthString = 6;
-  let randomString = '';
-  for (let i = 0; i < lengthString; i++) {
-    let rnum = Math.floor(Math.random() * characters.length);
-    randomString += characters[rnum];
-  }
-  return randomString;
-};
-
-
-let urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW"
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW"
-  },
-  i3BoG2: {
-    longURL: "https://www.go4343ogle.ca",
-    userID: "aJ48sW"
-  },
-
-};
-
-const users = {
-  "aJ48sW": {
-    id: "aJ48sW",
-    email: "user@example.com",
-    password: "$2a$10$3vh5EMqrqpvG52x.3rWJyOXZN81CzTGZYybs2FGvmySNrkkN/5A.6"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "$2a$10$3vh5EMqrqpvG52x.3rWJyOXZN81CzTGZYybs2FGvmySNrkkN/5A.6"
-  },
-  "userRandomI3D": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "$2a$10$3vh5EMqrqpvG52x.3rWJyOXZN81CzTGZYybs2FGvmySNrkkN/5A.6"
-  },
-};
-
-const findUserByEmail = (email) => {
-  for (let userID in users) {
-    const user = users[userID];
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
-};
-
-const urlsForUser = (id) => {
-  let ownURLs = {};
-  for (let shortUrl in urlDatabase) {
-    if (urlDatabase[shortUrl]['userID'] === id) {
-      ownURLs[shortUrl] = urlDatabase[shortUrl];
-    }
-  }
-  return ownURLs;
-};
 
 
 // Generate a short URL and get Long URL and push it in DB. After that redirect to a new page with a shortURL.
@@ -108,7 +45,7 @@ app.get("/urls/new", (req, res) => {
 // Render a page with a new-created shortURL.
 app.get("/urls/:shortURL", (req, res) => {
   const newUser = users[req.session["user_id"]];
-  let newDB = urlsForUser(newUser.id);
+  let newDB = urlsForUser(newUser.id, urlDatabase);
   if (!newDB[req.params.shortURL]) {
     return res.status(400).send('ID does not exist');
   }
@@ -124,10 +61,10 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
-  let foudUser = findUserByEmail(email);
+  let foudUser = findUserByEmail(email, users);
   const passwordCheck = bcrypt.compareSync(password, foudUser.password);
   if (!foudUser) {
-    return res.status(403).send('E-mail cannot be found');
+    return res.status(400).send('E-mail cannot be found');
   }
   if (!passwordCheck) {
     return res.status(403).send('Password is not correct');
@@ -150,7 +87,7 @@ app.post('/register', (req, res) => {
   if (!email || !hashedPassword) {
     return res.status(400).send('Email or Password cannot be blank');
   }
-  if (findUserByEmail(email)) {
+  if (findUserByEmail(email, users)) {
     return res.status(400).send('Email already exists');
   }
   users[userId] = {
@@ -164,7 +101,7 @@ app.post('/register', (req, res) => {
 
 // Editing a LongURL
 app.post('/urls/:id', (req, res) => {
-  const newDB = urlsForUser(req.session["user_id"]);
+  const newDB = urlsForUser(req.session["user_id"], urlDatabase);
   const id = req.params.id;
   if (typeof id === 'undefined') {
     return res.status(400).send('ID does not exist');
@@ -206,7 +143,7 @@ app.get("/urls", (req, res) => {
   if (typeof newUser === 'undefined') {
     return res.status(403).send('Please log in or register first!');
   }
-  let ownURLs = urlsForUser(newUser.id);
+  let ownURLs = urlsForUser(newUser.id, urlDatabase);
   const templateVars = { urls: ownURLs, user: newUser };
   res.render("urls_index", templateVars);
 });
@@ -218,7 +155,7 @@ app.get("/hello", (req, res) => {
 
 // Delete URL
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const newDB = urlsForUser(req.session["user_id"]);
+  const newDB = urlsForUser(req.session["user_id"], urlDatabase);
   const shortURL = req.params.shortURL;
   if (newDB[shortURL]) {
     delete urlDatabase[shortURL];
