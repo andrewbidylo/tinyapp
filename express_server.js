@@ -4,8 +4,8 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-const {findUserByEmail, generateRandomString, urlsForUser} = require('./helpers');
-const {urlDatabase, users} = require('./database');
+const { findUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
+const { urlDatabase, users } = require('./database');
 
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -14,7 +14,7 @@ app.set("view engine", "ejs");
 
 app.use(cookieSession({
   name: 'session',
-  keys: ['key1','key2'],
+  keys: ['key1', 'key2'],
 }));
 
 
@@ -51,7 +51,12 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!users[req.session["user_id"]]) {
     return res.status(403).send('You do not have access to this ID');
   }
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], user: newUser };
+  let ownUrl = urlsForUser(newUser.id, urlDatabase);
+  if (!ownUrl[req.params.shortURL]) {
+    return res.status(403).send('You do not have access to this ID');
+  }
+
+  const templateVars = { shortURL: req.params.shortURL, longURL: ownUrl[req.params.shortURL]['longURL'], user: newUser };
   res.render("urls_show", templateVars);
 });
 
@@ -68,7 +73,7 @@ app.post('/login', (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
   let foudUser = findUserByEmail(email, users);
-  
+
   if (!foudUser) {
     return res.status(400).send('E-mail cannot be found');
   }
@@ -76,13 +81,13 @@ app.post('/login', (req, res) => {
   if (!passwordCheck) {
     return res.status(403).send('Password is not correct');
   }
-  
+
   req.session['user_id'] = foudUser.id;
   res.redirect('/urls');
 });
 
 app.post('/logout', (req, res) => {
-  req.session["user_id"] = null;
+  req.session = null;
   res.redirect('/login');
 });
 
@@ -131,7 +136,7 @@ app.post('/urls/:id', (req, res) => {
     urlDatabase[id]['longURL'] = newLongURL;
     return res.redirect('/urls');
   } else {
-    return res.status(400).send('Please log in');
+    return res.status(400).send('Please login');
   }
 });
 
@@ -159,6 +164,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // After clicking on the short URL: check if this URL exists in DB and then redirect to a long URL.
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = urlDatabase[req.params.shortURL];
+
   if (shortURL === undefined) {
     return res.status(400).send('URL does not exist');
   } else {
