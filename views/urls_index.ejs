@@ -12,7 +12,7 @@
   <%- include('partials/_header') %>
   <main style="margin: 1em;">  
           <% if(typeof user !== 'undefined'){ %>
-          <% for(let shortURL in urls) { %>
+        
             <h3>My URLs</h3>
     <table class="table">
       <thead>
@@ -24,6 +24,7 @@
         </tr>
       </thead>
       <tbody>
+        <% for(let shortURL in urls) { %>
             <tr>
               <td><%= shortURL %></td>
               <td><%= urls[shortURL].longURL %></td>

@@ -22,7 +22,7 @@ app.use(cookieSession({
 * Create a new short URL
 */
 
-// Generate a short URL and get Long URL and push it in DB. After that redirect to a new page with a shortURL.
+// Generate a short URL and get Long URL and push it to DB. After that redirect to a new page with a shortURL.
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
@@ -48,8 +48,7 @@ app.get("/urls/new", (req, res) => {
 // Render a page with a new-created shortURL.
 app.get("/urls/:shortURL", (req, res) => {
   const newUser = users[req.session["user_id"]];
-  let newDB = urlsForUser(newUser.id, urlDatabase);
-  if (!newDB[req.params.shortURL]) {
+  if (!users[req.session["user_id"]]) {
     return res.status(403).send('You do not have access to this ID');
   }
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], user: newUser };
@@ -124,7 +123,7 @@ app.post('/register', (req, res) => {
 app.post('/urls/:id', (req, res) => {
   const newDB = urlsForUser(req.session["user_id"], urlDatabase);
   const id = req.params.id;
-  if (typeof id === 'undefined') {
+  if (!id) {
     return res.status(400).send('ID does not exist');
   }
   if (newDB[id]) {
@@ -174,7 +173,12 @@ app.get("/u/:shortURL", (req, res) => {
 */
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const newUser = users[req.session["user_id"]];
+  if (!newUser) {
+    return res.redirect('/login');
+  } else {
+    res.redirect('/urls');
+  }
 });
 
 
@@ -184,23 +188,13 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const newUser = users[req.session["user_id"]];
-  if (typeof newUser === 'undefined') {
+  if (!newUser) {
     return res.status(403).send('Please log in or register first!');
   }
   let ownURLs = urlsForUser(newUser.id, urlDatabase);
   const templateVars = { urls: ownURLs, user: newUser };
   res.render("urls_index", templateVars);
 });
-
-
-/*
-* Hello page
-*/
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 
 
 app.listen(PORT, () => {
